@@ -1,0 +1,69 @@
+name: Auto Label Issues
+
+on:
+  issues:
+    types: [opened, edited]
+
+jobs:
+  add-environment-labels:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+
+    steps:
+      - name: Add environment labels
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+            const body = issue.body || '';
+
+            // 定義環境 label 映射
+            const envLabels = {
+              'Lab': 'lab',
+              'Staging': 'staging',
+              'Prod': 'prod'
+            };
+
+            // 取得目前的 labels
+            const currentLabels = issue.labels.map(label => label.name);
+            const labelsToAdd = [];
+            const labelsToRemove = [];
+
+            // 檢查每個環境選項
+            for (const [envName, labelName] of Object.entries(envLabels)) {
+              // 檢查是否勾選（GitHub checkbox 格式：- [x] Label 或 - [X] Label）
+              const isChecked = new RegExp(`- \\[x\\]\\s*${envName}`, 'i').test(body);
+
+              if (isChecked && !currentLabels.includes(labelName)) {
+                labelsToAdd.push(labelName);
+              } else if (!isChecked && currentLabels.includes(labelName)) {
+                labelsToRemove.push(labelName);
+              }
+            }
+
+            // 添加新的 labels
+            if (labelsToAdd.length > 0) {
+              console.log(`Adding labels: ${labelsToAdd.join(', ')}`);
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                labels: labelsToAdd
+              });
+            }
+
+            // 移除不再選中的 labels
+            for (const label of labelsToRemove) {
+              console.log(`Removing label: ${label}`);
+              await github.rest.issues.removeLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                name: label
+              });
+            }
+
+            if (labelsToAdd.length === 0 && labelsToRemove.length === 0) {
+              console.log('No label changes needed');
+            }
