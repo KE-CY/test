@@ -1,5 +1,6 @@
 name: 新租戶建立申請
 description: 申請建立新租戶
+title: "[租戶申請] 建立租戶"
 labels: ["tenant-request"]
 
 body:

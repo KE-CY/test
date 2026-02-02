@@ -1,5 +1,6 @@
 name: 中台 API 使用申請
 description: 申請建立 API Client
+title: "[API Client 申請] 建立 API Client"
 labels: ["api-client-request"]
 
 body:

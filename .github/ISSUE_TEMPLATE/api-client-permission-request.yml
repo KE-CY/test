@@ -1,5 +1,6 @@
 name: API Client 租戶權限申請
 description: 申請賦予 API Client 存取租戶的權限
+title: "[權限申請] API Client 租戶權限"
 labels: ["api-client-permission-request"]
 
 body:
