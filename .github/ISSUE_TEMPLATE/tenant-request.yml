@@ -1,0 +1,64 @@
+name: 新租戶建立申請
+description: 申請建立新租戶
+labels: ["tenant-request"]
+
+body:
+  - type: input
+    id: tenant_code
+    attributes:
+      label: 租戶代碼
+      placeholder: 例如：sync, erp
+    validations:
+      required: true
+
+  - type: input
+    id: tenant_name
+    attributes:
+      label: 租戶名稱
+      placeholder: 例如：一零四資訊科技
+    validations:
+      required: true
+
+  - type: dropdown
+    id: tenant_level
+    attributes:
+      label: 租戶等級
+      options:
+        - 等級 1：共用系統
+        - 等級 2：共用伺服器
+        - 等級 3：專用伺服器
+    validations:
+      required: true
+
+  - type: input
+    id: applicant_name
+    attributes:
+      label: 申請人姓名
+    validations:
+      required: true
+  
+  - type: input
+    id: applicant_email
+    attributes:
+      label: 申請人信箱
+      placeholder: user@example.com
+    validations:
+      required: true
+
+  - type: input
+    id: department
+    attributes:
+      label: 部門
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: environments
+    attributes:
+      label: 申請環境
+      options:
+        - label: Lab
+        - label: Staging
+        - label: Prod
+    validations:
+      required: true

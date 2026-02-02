@@ -1,0 +1,53 @@
+name: API Client 租戶權限申請
+description: 申請賦予 API Client 存取租戶的權限
+labels: ["api-client-permission-request"]
+
+body:
+  - type: input
+    id: client_id
+    attributes:
+      label: Client ID
+      placeholder: 例如：max, portal
+    validations:
+      required: true
+
+  - type: textarea
+    id: tenant_codes
+    attributes:
+      label: 租戶代碼
+      placeholder: 例如：sync（或多個租戶，每行一個）
+    validations:
+      required: true
+
+  - type: input
+    id: applicant_name
+    attributes:
+      label: 申請人姓名
+    validations:
+      required: true
+
+  - type: input
+    id: applicant_email
+    attributes:
+      label: 申請人信箱
+      placeholder: user@example.com
+    validations:
+      required: true
+
+  - type: input
+    id: department
+    attributes:
+      label: 部門
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: environments
+    attributes:
+      label: 申請環境
+      options:
+        - label: Lab
+        - label: Staging
+        - label: Prod
+    validations:
+      required: true

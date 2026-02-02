@@ -1,0 +1,53 @@
+name: 中台 API 使用申請
+description: 申請建立 API Client
+labels: ["api-client-request"]
+
+body:
+  - type: input
+    id: client_id
+    attributes:
+      label: Client ID
+      placeholder: 例如：max, portal
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: 串接的應用程式描述
+      placeholder: 例如：行動應用程式 API 存取
+    validations:
+      required: true
+
+  - type: input
+    id: applicant_name
+    attributes:
+      label: 申請人姓名
+    validations:
+      required: true
+
+  - type: input
+    id: applicant_email
+    attributes:
+      label: 申請人信箱
+      placeholder: user@example.com
+    validations:
+      required: true
+
+  - type: input
+    id: department
+    attributes:
+      label: 部門
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: environments
+    attributes:
+      label: 申請環境
+      options:
+        - label: Lab
+        - label: Staging
+        - label: Prod
+    validations:
+      required: true

@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 技術文件
+    url: https://github.com/your-org/perf-dp-server/wiki
+    about: 查看詳細的技術文件和使用指南
