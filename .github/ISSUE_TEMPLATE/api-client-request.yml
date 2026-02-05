@@ -28,17 +28,9 @@ body:
       required: true
 
   - type: input
-    id: applicant_email
-    attributes:
-      label: 申請人信箱
-      placeholder: user@example.com
-    validations:
-      required: true
-
-  - type: input
     id: department
     attributes:
-      label: 部門
+      label: 產品編號
     validations:
       required: true
 
