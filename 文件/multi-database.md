@@ -22,7 +22,7 @@ sequenceDiagram
     participant OldDB as 舊資料庫<br/>(v1 → v1.5)
     participant Tool as Migration Tool
     
-    Note over Tool: Flyway / Liquibase<br/>或自建腳本
+    Note over Tool: 自建腳本
     
     Tool->>OldDB: 1. 新增欄位 (nullable)
     Note right of OldDB: ALTER TABLE users<br/>ADD COLUMN username VARCHAR(100),<br/>ADD COLUMN email VARCHAR(255)
@@ -37,9 +37,7 @@ sequenceDiagram
 ```
 
 **使用服務/工具：**
-- 🔧 **應用層**: Flyway、Liquibase、自建 Python/Node.js 腳本
-- 🔧 **AWS**: 無 (純 SQL 操作)
-- 🔧 **推薦工具**: pt-online-schema-change (大表)
+- 🔧 **應用層**: 自建 Node.js 腳本
 
 ---
 
@@ -71,10 +69,6 @@ sequenceDiagram
 
 **使用服務/工具：**
 - 🔧 **應用層**: 修改 ORM 層 (如 Sequelize, TypeORM, SQLAlchemy)
-- 🔧 **AWS**: 無
-- ⚠️ **注意事項**: 
-  - 讀取時優先讀新欄位: `username ?? user_name`
-  - 確保新舊欄位同步寫入
 
 ---
 
