@@ -106,26 +106,32 @@ const planned = [
   [join(routeDirectory, `${slug}.conf`), baseline[1]],
 ];
 
-// routes ConfigMap 不分環境收所有產品，每個 overlay 都必須有這個產品的 upstreams
-// 條目，否則該環境 helm template 會 fail。還沒註冊的環境沿用既有的佔位寫法。
+// overlay 只保留「已註冊環境」的條目：申請哪個環境就只動那個環境的 overlay，
+// 環境下架時連帶把該環境的條目移除。沒註冊的環境不留佔位。
 for (const environment of readdirSync(overlaysDirectory)) {
   const overlayDirectory = join(overlaysDirectory, environment);
-  const host = environments.includes(environment)
+  const registered = environments.includes(environment);
+  const host = registered
     ? new URL(
         parse(readFileSync(join(productDirectory, "environments", environment, "openapi.yaml"), "utf8"))
           .servers[0].url,
       ).hostname
-    : `${productId.toLowerCase()}-${environment}-upstream-unset.invalid`;
+    : null;
   for (const file of readdirSync(overlayDirectory).filter((name) => name.endsWith(".values.yaml"))) {
     const path = join(overlayDirectory, file);
     const document = parseDocument(readFileSync(path, "utf8"));
-    document.setIn(["upstreams", productId, "host"], host);
-    document.setIn(["upstreams", productId, "port"], 443);
-    document.setIn(["upstreams", productId, "keepalive"], 128);
-    // 來源若是空的 flow map（upstreams: {}），setIn 之後會變成單行，強制回區塊式
-    for (const path of [["upstreams"], ["upstreams", productId]]) {
-      const node = document.getIn(path, true);
-      if (node) node.flow = false;
+    if (registered) {
+      document.setIn(["upstreams", productId, "host"], host);
+      document.setIn(["upstreams", productId, "port"], 443);
+      document.setIn(["upstreams", productId, "keepalive"], 128);
+      // 來源若是空的 flow map（upstreams: {}），setIn 之後會變成單行，強制回區塊式
+      for (const nodePath of [["upstreams"], ["upstreams", productId]]) {
+        const node = document.getIn(nodePath, true);
+        if (node) node.flow = false;
+      }
+    } else {
+      if (document.getIn(["upstreams", productId]) === undefined) continue;
+      document.deleteIn(["upstreams", productId]);
     }
     // lineWidth: 0 關閉自動折行，否則會動到與這次上架無關的長行
     planned.push([path, document.toString({ lineWidth: 0 })]);
