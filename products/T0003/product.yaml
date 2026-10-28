@@ -4,8 +4,8 @@ base_path: /t0003
 
 scopes:
   - code: perf.organizationz.read
-    name: 查詢組織
-    description: 允許查詢組織資料
+    name: 組織查詢
+    description: 允許查詢組織與部門資料
   - code: perf.organization.write
     name: 寫入組織
     description: 允許寫入組織資料
