@@ -1,0 +1,46 @@
+name: Recheck gateway PR
+
+# require-gateway-pr 是綁在 pull_request 事件上的，上架 PR 在另一個 repo merge
+# 時這邊收不到通知，紅燈會一直停在那。這支定期掃一遍：凡是依賴的上架 PR 已經
+# merge、而擋門還是紅的，就自動把它重跑，不用人工按 Re-run jobs。
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+jobs:
+  rerun:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      pull-requests: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GATEWAY_TOKEN: ${{ secrets.Z_APPS_TOKEN }}
+      GATEWAY_REPO: ${{ vars.GATEWAY_REPO || '104corp/104z-apps' }}
+    steps:
+      - name: Re-run the gate for PRs whose gateway PR has merged
+        run: |
+          set -euo pipefail
+          gh pr list --state open --limit 100 --json number,headRefName,body > prs.json
+          count=0
+          while read -r pr; do
+            number=$(printf '%s' "$pr" | jq -r .number)
+            branch=$(printf '%s' "$pr" | jq -r .headRefName)
+            gateway=$(printf '%s' "$pr" | jq -r .body \
+              | grep -oE "Depends on ${GATEWAY_REPO}#[0-9]+" | head -1 | grep -oE '[0-9]+$' || true)
+            [ -n "$gateway" ] || continue
+
+            state=$(GH_TOKEN="$GATEWAY_TOKEN" gh pr view "$gateway" --repo "$GATEWAY_REPO" --json state --jq .state)
+            [ "$state" = "MERGED" ] || continue
+
+            run=$(gh run list --workflow="Require gateway PR" --branch "$branch" --limit 5 \
+              --json databaseId,conclusion --jq '[.[] | select(.conclusion == "failure")] | first | .databaseId // empty')
+            [ -n "$run" ] || continue
+
+            echo "PR #$number：$GATEWAY_REPO#$gateway 已 merge，重跑 run $run"
+            gh run rerun "$run" --failed
+            count=$((count + 1))
+          done < <(jq -c '.[]' prs.json)
+          echo "重跑了 $count 個擋門檢查"
