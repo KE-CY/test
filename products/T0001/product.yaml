@@ -1,0 +1,8 @@
+product_id: T0001
+owner: T0001@104.com.tw
+base_path: /t001
+
+scopes:
+  - code: perf.organization.read
+    name: 測試 Scope
+    description: 讀取組織資料
