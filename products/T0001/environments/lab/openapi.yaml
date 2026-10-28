@@ -11,7 +11,7 @@ paths:
   /organizations/{organizationId}:
     get:
       operationId: getOrganization
-      x-ha-gw-scope: perf.organization.read
+      x-ha-gw-scope: perf.organizationz.read
       parameters:
         - name: organizationId
           in: path
@@ -25,6 +25,13 @@ paths:
     post:
       operationId: postOrganization
       x-ha-gw-scope: perf.organization.write
+      responses:
+        "200":
+          description: Success
+  /organizationz:
+    post:
+      operationId: postOrganization1
+      x-ha-gw-scope: perf.organization1.write
       responses:
         "200":
           description: Success
