@@ -23,7 +23,7 @@ jobs:
       - name: Re-run the gate for PRs whose gateway PR has merged
         run: |
           set -euo pipefail
-          gh pr list --state open --limit 100 --json number,headRefName,body > prs.json
+          gh pr list --repo "$GITHUB_REPOSITORY" --state open --limit 100 --json number,headRefName,body > prs.json
           count=0
           while read -r pr; do
             number=$(printf '%s' "$pr" | jq -r .number)
@@ -35,12 +35,12 @@ jobs:
             state=$(GH_TOKEN="$GATEWAY_TOKEN" gh pr view "$gateway" --repo "$GATEWAY_REPO" --json state --jq .state)
             [ "$state" = "MERGED" ] || continue
 
-            run=$(gh run list --workflow="Require gateway PR" --branch "$branch" --limit 5 \
+            run=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow="Require gateway PR" --branch "$branch" --limit 5 \
               --json databaseId,conclusion --jq '[.[] | select(.conclusion == "failure")] | first | .databaseId // empty')
             [ -n "$run" ] || continue
 
             echo "PR #$number：$GATEWAY_REPO#$gateway 已 merge，重跑 run $run"
-            gh run rerun "$run" --failed
+            gh run rerun --repo "$GITHUB_REPOSITORY" "$run" --failed
             count=$((count + 1))
           done < <(jq -c '.[]' prs.json)
           echo "重跑了 $count 個擋門檢查"
