@@ -21,3 +21,10 @@ paths:
       responses:
         "200":
           description: Success
+  /organizations:
+    post:
+      operationId: postOrganization
+      x-ha-gw-scope: perf.organization.write
+      responses:
+        "200":
+          description: Success
