@@ -1,6 +1,6 @@
 name: 申請新增
 description: 全新產品第一次註冊，或既有產品開通還沒建立過的環境
-title: "[新增] "
+title: "[新增] 產品編號"
 labels: ["api-registration", "request:add"]
 body:
   - type: markdown
@@ -8,6 +8,7 @@ body:
       value: |
         **全新產品第一次註冊**，或**既有產品開通還沒建立過的環境**（lab / stg / prod）。所有欄位都必填。
         既有環境的後續調整請用「申請更新」。欄位規則見 [README](https://github.com/KE-CY/test/blob/main/README.md)。
+        標題不用自己想：送出後會自動改成與 PR 相同的格式（例如 `Hrmpro/register f0055 lab`）。
         送出後會自動產生 PR 交由 API Center 審核；若驗證不通過會在這張 issue 留言，修正內容後重新編輯 issue 即可重跑。
   - type: input
     id: product_id
