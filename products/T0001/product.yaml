@@ -1,0 +1,8 @@
+product_id: T0001
+owner: t001@104.com.tw
+base_path: /t001
+
+scopes:
+  - code: perf.organization.read
+    name: 名稱
+    description: desc
