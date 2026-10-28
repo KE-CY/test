@@ -6,3 +6,6 @@ scopes:
   - code: perf.organization.read
     name: 名稱
     description: desc
+  - code: perf.organization.write
+    name: 新增選項
+    description: desc描述
