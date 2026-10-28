@@ -37,12 +37,12 @@ jobs:
           node scripts/issue-to-files.mjs 2>&1 | tee -a "$RUNNER_TEMP/apply.log"
           exit "${PIPESTATUS[0]}"
 
-      # 標題交給 parser 決定，申請人填什麼都會被正規化成與 PR 一致。
+      # 標題交給 parser 決定，申請人填什麼都會被正規化成 [動作] 產品編號 環境。
       # 這個 edit 是 GITHUB_TOKEN 發的，不會再觸發一次 workflow，所以不會迴圈。
-      - name: Sync the issue title with the PR title
-        if: steps.apply.outputs.title != github.event.issue.title
+      - name: Normalize the issue title
+        if: steps.apply.outputs.issue_title != github.event.issue.title
         env:
-          TITLE: ${{ steps.apply.outputs.title }}
+          TITLE: ${{ steps.apply.outputs.issue_title }}
         run: gh issue edit "$ISSUE" --title "$TITLE"
 
       # PR 由 GITHUB_TOKEN 開，不會觸發 validate.yml，所以在這裡先驗

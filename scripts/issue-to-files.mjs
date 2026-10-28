@@ -270,11 +270,15 @@ const action = { add: "register", update: "update", remove: "remove" }[request];
 const target = [action, productId.toLowerCase(), ...environments].join("-");
 const branch = `${slug}/${target}`;
 const title = `${slug}/${target}`.replaceAll("-", " ").replace(/^./, (c) => c.toUpperCase());
+// issue 標題用中文動作 + 產品編號 + 環境，列表上一眼看得懂是誰的什麼申請
+const issueTitle = `[${{ add: "新增", update: "更新", remove: "移除" }[request]}] ${productId}${
+  environments.length > 0 ? ` ${environments.join(" ")}` : ""
+}`;
 const summary = changes.map((change) => `- ${change}`).join("\n");
 if (process.env.GITHUB_OUTPUT) {
   appendFileSync(
     process.env.GITHUB_OUTPUT,
-    `product_id=${productId}\nbranch=${branch}\nbranch_prefix=${slug}/\ntitle=${title}\nchanges<<CHANGES\n${summary}\nCHANGES\n`,
+    `product_id=${productId}\nbranch=${branch}\nbranch_prefix=${slug}/\ntitle=${title}\nissue_title=${issueTitle}\nchanges<<CHANGES\n${summary}\nCHANGES\n`,
   );
 }
-console.log(`${title}\n${summary}`);
+console.log(`${issueTitle}\n${title}\n${summary}`);

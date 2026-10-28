@@ -1,6 +1,6 @@
 name: 申請移除
 description: 下架指定的環境；全部環境都移除等於整個產品下架
-title: "[移除] 產品編號"
+title: "[移除] 產品編號 環境"
 labels: ["api-registration", "request:remove"]
 body:
   - type: markdown
@@ -8,7 +8,7 @@ body:
       value: |
         **下架指定的環境**：只有勾選的環境會被刪除，沒勾的保留。
         把所有已註冊的環境都勾起來，等於整個產品下架（連 product.yaml 與 scope 一起刪除）。完整說明見 [README](https://github.com/KE-CY/test/blob/main/README.md)。
-        標題不用自己想：送出後會自動改成與 PR 相同的格式（例如 `Hrmpro/register f0055 lab`）。
+        標題不用自己想：送出後會依填寫內容自動改成 `[移除] 產品編號 環境`（例如 `[移除] F0055 lab stg`）。
         送出後會自動產生 PR 交由 API Center 審核；若驗證不通過會在這張 issue 留言列出每一項錯誤，修正內容後重新編輯 issue 即可重跑。
   - type: input
     id: product_id
