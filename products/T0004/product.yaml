@@ -12,6 +12,3 @@ scopes:
   - code: perf.organization1.write
     name: 寫入組織備援
     description: 允許寫入組織備援資料
-  - code: perf.unused.read
-    name: 預留未使用
-    description: 宣告但目前沒有 operation 引用
