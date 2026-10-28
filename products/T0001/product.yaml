@@ -9,3 +9,9 @@ scopes:
   - code: perf.organization.write
     name: 新增選項
     description: desc描述
+  - code: perf.organizationz.read
+    name: 我更新了名稱
+    description: 更新了描述
+  - code: perf.organization1.write
+    name: 測試新增
+    description: 測試描述
