@@ -1,0 +1,76 @@
+name: 申請更新
+description: 既有產品的後續調整：換 OpenAPI、新增或修改 scope、改負責人或路徑
+title: "[更新] "
+labels: ["api-registration", "request:update"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **既有產品的後續調整**：換掉某環境的 OpenAPI、新增或修改 scope、變更產品負責人或路徑前綴。
+        還沒建立過的環境請用「申請新增」。欄位規則見 [README](https://github.com/KE-CY/test/blob/main/README.md)。
+        送出後會自動產生 PR 交由 API Center 審核；若驗證不通過會在這張 issue 留言，修正內容後重新編輯 issue 即可重跑。
+  - type: input
+    id: product_id
+    attributes:
+      label: 產品編號
+      description: DevMaster 產品編號
+      placeholder: P0078
+    validations:
+      required: true
+  - type: input
+    id: owner
+    attributes:
+      label: 產品負責人 email
+      description: 本次申請後的 email；沒有要改就填目前註冊的值
+      placeholder: team-perf@104.com.tw
+    validations:
+      required: true
+  - type: input
+    id: base_path
+    attributes:
+      label: 對外路徑前綴
+      description: 本次申請後的路徑；沒有要改就填目前註冊的值。變更會影響既有呼叫方
+      placeholder: /perf
+    validations:
+      required: true
+  - type: dropdown
+    id: environments
+    attributes:
+      label: 要更新的環境
+      description: 要換掉 OpenAPI 的環境，可多選；只改 scope 或負責人時免填
+      multiple: true
+      options:
+        - lab
+        - stg
+        - prod
+  - type: textarea
+    id: scopes
+    attributes:
+      label: Scopes
+      description: |
+        一行一個，格式 `code | 名稱 | 說明`。只列**本次要新增或修改**的 scope，沒列到的不受影響。
+        新的 code 會新增，既有的 code 會覆蓋名稱與說明。**這裡不能刪除 scope。**
+      placeholder: |
+        perf.organization.read | 組織查詢 | 允許查詢組織與部門資料
+  - type: markdown
+    attributes:
+      value: |
+        ### OpenAPI 文件
+
+        只填要更新的環境；上傳的檔案會整份取代該環境現有的 OpenAPI。
+        **一律用檔案上傳**：把 `.yaml` 拖曳到欄位裡，不接受貼外部連結。DevMaster APIM 匯出的是 `.json`，請先轉成 YAML。
+  - type: textarea
+    id: openapi_lab_file
+    attributes:
+      label: lab OpenAPI 檔案
+      description: 把 .yaml 檔拖曳到這個欄位上傳
+  - type: textarea
+    id: openapi_stg_file
+    attributes:
+      label: stg OpenAPI 檔案
+      description: 把 .yaml 檔拖曳到這個欄位上傳
+  - type: textarea
+    id: openapi_prod_file
+    attributes:
+      label: prod OpenAPI 檔案
+      description: 把 .yaml 檔拖曳到這個欄位上傳

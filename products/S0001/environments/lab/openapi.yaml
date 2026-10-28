@@ -1,0 +1,32 @@
+openapi: 3.0.3
+
+info:
+  title: SAMPLE API
+  version: 1.0.0
+
+servers:
+  - url: https://sample.example.com
+
+paths:
+  /things:
+    get:
+      operationId: listThings
+      summary: 查詢範例資料列表
+      x-ha-gw-scope: sample.thing.read
+      responses:
+        "200":
+          description: Success
+  /things/{thingId}:
+    get:
+      operationId: getThing
+      summary: 查詢單筆範例資料
+      x-ha-gw-scope: sample.thing.read
+      parameters:
+        - name: thingId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Success

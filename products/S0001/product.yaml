@@ -1,0 +1,8 @@
+product_id: S0001
+owner: sample@example.com
+base_path: /sample
+
+scopes:
+  - code: sample.thing.read
+    name: 查詢範例資料
+    description: 允許查詢範例資料

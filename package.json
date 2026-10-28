@@ -1,0 +1,22 @@
+{
+  "name": "ha-ext-gw-config-test",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "validate:registry": "node scripts/validate.mjs",
+    "validate:openapi": "redocly lint \"products/**/openapi.yaml\" --extends=spec",
+    "validate": "npm run validate:registry && npm run validate:openapi",
+    "generate:nginx": "node scripts/generate-nginx.mjs",
+    "test": "node --test",
+    "check": "npm run validate && npm test"
+  },
+  "devDependencies": {
+    "@redocly/cli": "^2.46.0",
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1",
+    "yaml": "^2.9.0"
+  }
+}

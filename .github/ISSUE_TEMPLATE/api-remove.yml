@@ -1,0 +1,54 @@
+name: 申請移除
+description: 下架指定的環境；全部環境都移除等於整個產品下架
+title: "[移除] "
+labels: ["api-registration", "request:remove"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **下架指定的環境**：只有勾選的環境會被刪除，沒勾的保留。
+        把所有已註冊的環境都勾起來，等於整個產品下架（連 product.yaml 與 scope 一起刪除）。欄位規則見 [README](https://github.com/KE-CY/test/blob/main/README.md)。
+        送出後會自動產生 PR 交由 API Center 審核；若驗證不通過會在這張 issue 留言，修正內容後重新編輯 issue 即可重跑。
+  - type: input
+    id: product_id
+    attributes:
+      label: 產品編號
+      description: DevMaster 產品編號
+      placeholder: P0078
+    validations:
+      required: true
+  - type: input
+    id: owner
+    attributes:
+      label: 產品負責人 email
+      description: 填目前註冊的 email，用來確認沒有搞錯產品
+      placeholder: team-perf@104.com.tw
+    validations:
+      required: true
+  - type: input
+    id: base_path
+    attributes:
+      label: 對外路徑前綴
+      description: 填目前註冊的路徑，用來確認沒有搞錯產品
+      placeholder: /perf
+    validations:
+      required: true
+  - type: dropdown
+    id: environments
+    attributes:
+      label: 要移除的環境
+      description: 只有勾選的環境會被刪除；全部勾選等於整個產品下架
+      multiple: true
+      options:
+        - lab
+        - stg
+        - prod
+    validations:
+      required: true
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: 移除確認
+      options:
+        - label: 我確認勾選環境的 API 會全部下架，且已通知使用這些 API 的對象
+          required: true

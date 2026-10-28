@@ -1,0 +1,93 @@
+name: Issue to PR
+
+on:
+  issues:
+    types: [opened, edited]
+
+jobs:
+  open-pr:
+    if: github.event.issue.state == 'open' && contains(github.event.issue.labels.*.name, 'api-registration')
+    runs-on: ubuntu-latest
+    # 同一時間只跑一張申請，避免兩張 issue 同時改到同一份 registry
+    concurrency:
+      group: issue-to-pr
+      cancel-in-progress: false
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      ISSUE: ${{ github.event.issue.number }}
+      LOG: ${{ runner.temp }}/apply.log
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+      - run: npm ci
+
+      - id: apply
+        env:
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          ISSUE_LABELS: ${{ toJSON(github.event.issue.labels.*.name) }}
+          # 下載拖曳上傳的附件要帶 token
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          node scripts/issue-to-files.mjs 2>&1 | tee -a "$LOG"
+          exit "${PIPESTATUS[0]}"
+
+      # PR 由 GITHUB_TOKEN 開，不會觸發 validate.yml，所以在這裡先驗
+      - run: |
+          npm run check 2>&1 | tee -a "$LOG"
+          exit "${PIPESTATUS[0]}"
+
+      - name: Check for a competing PR on the same product
+        env:
+          PREFIX: api-registration/${{ steps.apply.outputs.product_id }}-issue-
+        run: |
+          set -euo pipefail
+          duplicate=$(gh pr list --state open --limit 100 --json number,title,headRefName \
+            --jq "[.[] | select(.headRefName | startswith(\"$PREFIX\")) | select(.headRefName != \"${PREFIX}${ISSUE}\")] | first // empty")
+          if [ -n "$duplicate" ]; then
+            number=$(printf '%s' "$duplicate" | jq -r .number)
+            title=$(printf '%s' "$duplicate" | jq -r .title)
+            gh issue comment "$ISSUE" --body "❌ ${{ steps.apply.outputs.product_id }} 已有進行中的申請 PR #${number}（${title}）。請先合併或關閉該 PR，再重新編輯這張 issue。"
+            exit 1
+          fi
+
+      - name: Commit and open PR
+        run: |
+          set -euo pipefail
+          title="${{ steps.apply.outputs.title }}"
+          branch="api-registration/${{ steps.apply.outputs.product_id }}-issue-${ISSUE}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$branch"
+          git add -A products
+          git commit -m "$title (#$ISSUE)"
+          git push -f origin "$branch"
+          printf '由 #%s 自動產生，內容以該 issue 為準。\n\n### 異動內容\n\n%s\n\nCloses #%s\n' \
+            "$ISSUE" \
+            "${{ steps.apply.outputs.changes }}" \
+            "$ISSUE" > "$RUNNER_TEMP/pr-body.md"
+          gh pr view "$branch" >/dev/null 2>&1 \
+            || gh pr create --base main --head "$branch" --title "$title (#$ISSUE)" --body-file "$RUNNER_TEMP/pr-body.md"
+          gh issue comment "$ISSUE" --body "✅ 已開出 PR：$(gh pr view "$branch" --json url --jq .url)"
+
+      - name: Report the failure on the issue
+        if: failure()
+        run: |
+          {
+            echo "❌ 申請未通過，修正後重新編輯這張 issue 即可重跑。"
+            echo
+            if [ -s "$LOG" ]; then
+              echo '```'
+              tail -n 40 "$LOG"
+              echo '```'
+              echo
+            fi
+            echo "[完整執行紀錄](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})"
+          } > "$RUNNER_TEMP/failure.md"
+          gh issue comment "$ISSUE" --body-file "$RUNNER_TEMP/failure.md"
