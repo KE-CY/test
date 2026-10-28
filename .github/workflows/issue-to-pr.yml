@@ -44,15 +44,25 @@ jobs:
 
       - name: Check for a competing PR on the same product
         env:
-          PREFIX: api-registration/${{ steps.apply.outputs.product_id }}-issue-
+          PREFIX: ${{ steps.apply.outputs.branch_prefix }}
+          BRANCH: ${{ steps.apply.outputs.branch }}
         run: |
           set -euo pipefail
           duplicate=$(gh pr list --state open --limit 100 --json number,title,headRefName \
-            --jq "[.[] | select(.headRefName | startswith(\"$PREFIX\")) | select(.headRefName != \"${PREFIX}${ISSUE}\")] | first // empty")
+            --jq "[.[] | select(.headRefName | startswith(\"$PREFIX\")) | select(.headRefName != \"$BRANCH\")] | first // empty")
           if [ -n "$duplicate" ]; then
             number=$(printf '%s' "$duplicate" | jq -r .number)
             title=$(printf '%s' "$duplicate" | jq -r .title)
             gh issue comment "$ISSUE" --body "❌ ${{ steps.apply.outputs.product_id }} 已有進行中的申請 PR #${number}（${title}）。請先合併或關閉該 PR，再重新編輯這張 issue。"
+            exit 1
+          fi
+          # 分支名不含 issue 編號，同產品同動作同環境的兩張 issue 會指到同一條分支
+          existing=$(gh pr list --state open --head "$BRANCH" --json number,title,body --jq 'first // empty')
+          if [ -n "$existing" ] \
+            && ! printf '%s' "$existing" | jq -e --arg n "$ISSUE" '.body | test("Closes #" + $n + "\\b")' >/dev/null; then
+            number=$(printf '%s' "$existing" | jq -r .number)
+            title=$(printf '%s' "$existing" | jq -r .title)
+            gh issue comment "$ISSUE" --body "❌ 分支 \`$BRANCH\` 上已有來自其他 issue 的 PR #${number}（${title}）。請先處理該 PR，再重新編輯這張 issue。"
             exit 1
           fi
 
@@ -60,7 +70,7 @@ jobs:
         run: |
           set -euo pipefail
           title="${{ steps.apply.outputs.title }}"
-          branch="api-registration/${{ steps.apply.outputs.product_id }}-issue-${ISSUE}"
+          branch="${{ steps.apply.outputs.branch }}"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git switch -c "$branch"
@@ -72,7 +82,7 @@ jobs:
             "${{ steps.apply.outputs.changes }}" \
             "$ISSUE" > "$RUNNER_TEMP/pr-body.md"
           gh pr view "$branch" >/dev/null 2>&1 \
-            || gh pr create --base main --head "$branch" --title "$title (#$ISSUE)" --body-file "$RUNNER_TEMP/pr-body.md"
+            || gh pr create --base main --head "$branch" --title "$title" --body-file "$RUNNER_TEMP/pr-body.md"
           gh issue comment "$ISSUE" --body "✅ 已開出 PR：$(gh pr view "$branch" --json url --jq .url)"
 
       - name: Report the failure on the issue

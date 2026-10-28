@@ -121,7 +121,7 @@ const openapi = (cwd, environment) =>
 test("add registers a brand new product", async () => {
   await withRun("add", addBody({ environments: "lab, stg", stg: attachment("stg.yaml") }), (cwd, result) => {
     assert.equal(result.status, 0, result.stderr);
-    assert.match(result.stdout, /申請新增 P0078（lab, stg）/);
+    assert.match(result.stdout, /^Perf\/register p0078 lab stg$/m);
     assert.match(result.stdout, /新增 scope：perf\.organization\.read/);
     assert.match(result.stdout, /新增環境：lab、stg/);
     assert.match(openapi(cwd, "lab"), /lab\.104\.com\.tw/);
@@ -303,7 +303,7 @@ test("remove drops only the selected environment", async () => {
     removeBody({ environments: "stg" }),
     (cwd, result) => {
       assert.equal(result.status, 0, result.stderr);
-      assert.match(result.stdout, /申請移除 P0078（stg）/);
+      assert.match(result.stdout, /^Perf\/remove p0078 stg$/m);
       assert.match(result.stdout, /移除環境：stg（保留 lab）/);
       assert.equal(existsSync(join(cwd, "products", "P0078", "environments", "stg")), false);
       assert.equal(existsSync(join(cwd, "products", "P0078", "environments", "lab")), true);
@@ -415,4 +415,28 @@ test("rejects an issue with no request label", async () => {
     assert.equal(result.status, 1);
     assert.match(result.stderr, /沒有 request:add/);
   });
+});
+
+test("names the branch and the title like the existing registration PRs", async () => {
+  const cwd = mkdtempSync(join(tmpdir(), "issue-to-files-"));
+  const output = join(cwd, "output.txt");
+  writeFileSync(output, "");
+  try {
+    await promisify(execFile)(process.execPath, [script], {
+      cwd,
+      env: {
+        ...process.env,
+        ISSUE_BODY: addBody({ environments: "lab" }),
+        ISSUE_LABELS: JSON.stringify(["api-registration", "request:add"]),
+        ATTACHMENT_HOST: origin,
+        GITHUB_OUTPUT: output,
+      },
+    });
+    const written = readFileSync(output, "utf8");
+    assert.match(written, /^branch=perf\/register-p0078-lab$/m);
+    assert.match(written, /^branch_prefix=perf\/$/m);
+    assert.match(written, /^title=Perf\/register p0078 lab$/m);
+  } finally {
+    rmSync(cwd, { recursive: true });
+  }
 });

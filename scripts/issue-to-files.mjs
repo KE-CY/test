@@ -256,13 +256,18 @@ if (request === "remove") {
   );
 }
 
-const action = { add: "新增", update: "更新", remove: "移除" }[request];
+// 分支與標題沿用既有註冊 PR 的慣例：<base_path 去斜線>/register-<product_id>-<env>
+// 標題就是 GitHub 從分支名自動產生的樣子：- 換空格、首字母大寫
+const slug = basePath.replace(/^\//, "");
+const action = { add: "register", update: "update", remove: "remove" }[request];
+const target = [action, productId.toLowerCase(), ...environments].join("-");
+const branch = `${slug}/${target}`;
+const title = `${slug}/${target}`.replaceAll("-", " ").replace(/^./, (c) => c.toUpperCase());
 const summary = changes.map((change) => `- ${change}`).join("\n");
-const title = `申請${action} ${productId}${environments.length > 0 ? `（${environments.join(", ")}）` : ""}`;
 if (process.env.GITHUB_OUTPUT) {
   appendFileSync(
     process.env.GITHUB_OUTPUT,
-    `product_id=${productId}\ntitle=${title}\nchanges<<CHANGES\n${summary}\nCHANGES\n`,
+    `product_id=${productId}\nbranch=${branch}\nbranch_prefix=${slug}/\ntitle=${title}\nchanges<<CHANGES\n${summary}\nCHANGES\n`,
   );
 }
 console.log(`${title}\n${summary}`);
