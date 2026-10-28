@@ -19,7 +19,6 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       ISSUE: ${{ github.event.issue.number }}
-      LOG: ${{ runner.temp }}/apply.log
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -35,12 +34,12 @@ jobs:
           # 下載拖曳上傳的附件要帶 token
           GITHUB_TOKEN: ${{ github.token }}
         run: |
-          node scripts/issue-to-files.mjs 2>&1 | tee -a "$LOG"
+          node scripts/issue-to-files.mjs 2>&1 | tee -a "$RUNNER_TEMP/apply.log"
           exit "${PIPESTATUS[0]}"
 
       # PR 由 GITHUB_TOKEN 開，不會觸發 validate.yml，所以在這裡先驗
       - run: |
-          npm run check 2>&1 | tee -a "$LOG"
+          npm run check 2>&1 | tee -a "$RUNNER_TEMP/apply.log"
           exit "${PIPESTATUS[0]}"
 
       - name: Check for a competing PR on the same product
@@ -82,9 +81,9 @@ jobs:
           {
             echo "❌ 申請未通過，修正後重新編輯這張 issue 即可重跑。"
             echo
-            if [ -s "$LOG" ]; then
+            if [ -s "$RUNNER_TEMP/apply.log" ]; then
               echo '```'
-              tail -n 40 "$LOG"
+              tail -n 40 "$RUNNER_TEMP/apply.log"
               echo '```'
               echo
             fi
