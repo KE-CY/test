@@ -7,14 +7,16 @@ body:
     attributes:
       value: |
         **全新產品第一次註冊**，或**既有產品開通還沒建立過的環境**（lab / stg / prod）。所有欄位都必填。
-        既有環境的後續調整請用「申請更新」。欄位規則見 [README](https://github.com/KE-CY/test/blob/main/README.md)。
+        既有環境的後續調整請用「申請更新」。完整說明見 [README](https://github.com/KE-CY/test/blob/main/README.md)。
         標題不用自己想：送出後會自動改成與 PR 相同的格式（例如 `Hrmpro/register f0055 lab`）。
-        送出後會自動產生 PR 交由 API Center 審核；若驗證不通過會在這張 issue 留言，修正內容後重新編輯 issue 即可重跑。
+        送出後會自動產生 PR 交由 API Center 審核；若驗證不通過會在這張 issue 留言列出每一項錯誤，修正內容後重新編輯 issue 即可重跑。
   - type: input
     id: product_id
     attributes:
       label: 產品編號
-      description: DevMaster 產品編號
+      description: |
+        DevMaster 產品編號：**1 個大寫英文字母 + 4 位數字**，例如 `P0078`。
+        新產品請確認這個編號還沒有人用；既有產品請填原本的編號。
       placeholder: P0078
     validations:
       required: true
@@ -22,7 +24,9 @@ body:
     id: owner
     attributes:
       label: 產品負責人 email
-      description: 既有產品請填目前註冊的 email；要變更請用「申請更新」
+      description: |
+        必須是合法的 email 格式。
+        既有產品請填目前註冊的 email，不符會被擋下；要變更請用「申請更新」。
       placeholder: team-perf@104.com.tw
     validations:
       required: true
@@ -30,7 +34,9 @@ body:
     id: base_path
     attributes:
       label: 對外路徑前綴
-      description: 既有產品請填目前註冊的路徑；要變更請用「申請更新」
+      description: |
+        斜線開頭，之後第一個字必須是小寫英文，其餘只能是小寫英數或連字號，例如 `/perf`。不可重複使用其他產品已占用的前綴。
+        既有產品請填目前註冊的路徑，不符會被擋下；要變更請用「申請更新」。
       placeholder: /perf
     validations:
       required: true
@@ -38,7 +44,7 @@ body:
     id: environments
     attributes:
       label: 目標環境
-      description: 本次要建立的環境，可多選；已建立過的環境請用「申請更新」
+      description: 本次要建立的環境，可多選。**已建立過的環境會被擋下**，那種情況請用「申請更新」。
       multiple: true
       options:
         - lab
@@ -51,8 +57,12 @@ body:
     attributes:
       label: 新增的 Scopes
       description: |
-        一行一個，格式 `code, 名稱, 說明`，列出這些環境的 OpenAPI 會用到的全部 scope。
-        既有產品開新環境時，沿用的 scope 照原樣列出即可（內容相同視為沿用，不同會被擋下）。
+        一行一個，格式 `code, 名稱, 說明`（說明本身可以含逗號）。
+        - `code`：全小寫，**至少含一個點**，每一段以小寫英文開頭，其餘為小寫英數或連字號，例如 `perf.organization.read`。不需要用產品編號當前綴。
+        - `名稱`、`說明`：不可空白。
+        - 同一個產品的 code 不可重複。
+
+        列出這些環境的 OpenAPI 會用到的**全部** scope。既有產品開新環境時，沿用的 scope 照原樣列出即可——內容相同視為沿用，內容不同會被擋下。
       placeholder: |
         perf.organization.read, 查詢組織, 允許查詢組織資料
     validations:
@@ -62,8 +72,19 @@ body:
       value: |
         ### OpenAPI 文件
 
-        每個勾選的環境都要上傳；各環境的 server URL 與開放的 operation 彼此獨立。
-        **一律用檔案上傳**：把 `.yaml` 拖曳到欄位裡，不接受貼外部連結。DevMaster APIM 匯出的是 `.json`，請先轉成 YAML。
+        每個勾選的環境都要上傳一份；各環境的 server URL 與開放的 operation 彼此獨立。
+        **只接受拖曳上傳的 `.yaml` 附件** —— 不接受 `.json`，也不接受貼外部連結。DevMaster APIM 匯出的是 `.json`，請先轉成 YAML。
+
+        文件必須符合：
+
+        - OpenAPI **3.0 或 3.1**，不接受 Swagger 2.0
+        - `servers` 必須且只能有一筆，是完整的 `http`/`https` URL
+        - server URL 不可結尾為 `/`，也不可帶路徑、帳號密碼、query string 或 fragment
+        - 至少要有一個 operation
+        - path 斜線開頭、不可結尾斜線；每一段是小寫英數（可含 `.` `_` `~` `-`）或 `{參數名}`
+        - path **不含** 上面填的對外路徑前綴
+        - 每個 operation 要有**唯一**的 `operationId`
+        - 每個 operation 要有 `x-ha-gw-scope`，且該 scope 必須已在上面的 Scopes 宣告過
   - type: textarea
     id: openapi_lab_file
     attributes:

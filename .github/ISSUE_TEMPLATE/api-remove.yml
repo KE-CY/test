@@ -7,14 +7,16 @@ body:
     attributes:
       value: |
         **下架指定的環境**：只有勾選的環境會被刪除，沒勾的保留。
-        把所有已註冊的環境都勾起來，等於整個產品下架（連 product.yaml 與 scope 一起刪除）。欄位規則見 [README](https://github.com/KE-CY/test/blob/main/README.md)。
+        把所有已註冊的環境都勾起來，等於整個產品下架（連 product.yaml 與 scope 一起刪除）。完整說明見 [README](https://github.com/KE-CY/test/blob/main/README.md)。
         標題不用自己想：送出後會自動改成與 PR 相同的格式（例如 `Hrmpro/register f0055 lab`）。
-        送出後會自動產生 PR 交由 API Center 審核；若驗證不通過會在這張 issue 留言，修正內容後重新編輯 issue 即可重跑。
+        送出後會自動產生 PR 交由 API Center 審核；若驗證不通過會在這張 issue 留言列出每一項錯誤，修正內容後重新編輯 issue 即可重跑。
   - type: input
     id: product_id
     attributes:
       label: 產品編號
-      description: DevMaster 產品編號
+      description: |
+        DevMaster 產品編號：**1 個大寫英文字母 + 4 位數字**，例如 `P0078`。
+        必須是已註冊的產品。
       placeholder: P0078
     validations:
       required: true
@@ -22,7 +24,9 @@ body:
     id: owner
     attributes:
       label: 產品負責人 email
-      description: 填目前註冊的 email，用來確認沒有搞錯產品
+      description: |
+        必須是合法的 email 格式。
+        填目前註冊的 email，不符會被擋下——這是「有沒有搞錯產品」的確認。
       placeholder: team-perf@104.com.tw
     validations:
       required: true
@@ -30,7 +34,9 @@ body:
     id: base_path
     attributes:
       label: 對外路徑前綴
-      description: 填目前註冊的路徑，用來確認沒有搞錯產品
+      description: |
+        斜線開頭，之後第一個字必須是小寫英文，其餘只能是小寫英數或連字號，例如 `/perf`。不可重複使用其他產品已占用的前綴。
+        填目前註冊的路徑，不符會被擋下——這是「有沒有搞錯產品」的確認。
       placeholder: /perf
     validations:
       required: true
@@ -38,7 +44,7 @@ body:
     id: environments
     attributes:
       label: 要移除的環境
-      description: 只有勾選的環境會被刪除；全部勾選等於整個產品下架
+      description: 只有勾選的環境會被刪除；**沒註冊過的環境會被擋下**。全部勾選等於整個產品下架。
       multiple: true
       options:
         - lab
@@ -46,6 +52,10 @@ body:
         - prod
     validations:
       required: true
+  - type: markdown
+    attributes:
+      value: |
+        移除後若保留的環境仍有 operation 引用到被刪掉的 scope，CI 會擋下這次申請。
   - type: checkboxes
     id: confirm
     attributes:
