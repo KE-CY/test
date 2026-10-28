@@ -1,0 +1,17 @@
+product_id: T0004
+owner: kelly.ko@104.com.tw
+base_path: /t0004
+
+scopes:
+  - code: perf.organizationz.read
+    name: 查詢組織
+    description: 允許查詢組織資料
+  - code: perf.organization.write
+    name: 寫入組織
+    description: 允許寫入組織資料
+  - code: perf.organization1.write
+    name: 寫入組織備援
+    description: 允許寫入組織備援資料
+  - code: perf.unused.read
+    name: 預留未使用
+    description: 宣告但目前沒有 operation 引用
