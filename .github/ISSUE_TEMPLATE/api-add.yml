@@ -50,10 +50,10 @@ body:
     attributes:
       label: 新增的 Scopes
       description: |
-        一行一個，格式 `code | 名稱 | 說明`，列出這些環境的 OpenAPI 會用到的全部 scope。
+        一行一個，格式 `code, 名稱, 說明`，列出這些環境的 OpenAPI 會用到的全部 scope。
         既有產品開新環境時，沿用的 scope 照原樣列出即可（內容相同視為沿用，不同會被擋下）。
       placeholder: |
-        perf.organization.read | 查詢組織 | 允許查詢組織資料
+        perf.organization.read, 查詢組織, 允許查詢組織資料
     validations:
       required: true
   - type: markdown

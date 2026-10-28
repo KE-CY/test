@@ -48,10 +48,10 @@ body:
     attributes:
       label: Scopes
       description: |
-        一行一個，格式 `code | 名稱 | 說明`。只列**本次要新增或修改**的 scope，沒列到的不受影響。
+        一行一個，格式 `code, 名稱, 說明`。只列**本次要新增或修改**的 scope，沒列到的不受影響。
         新的 code 會新增，既有的 code 會覆蓋名稱與說明。**這裡不能刪除 scope。**
       placeholder: |
-        perf.organization.read | 組織查詢 | 允許查詢組織與部門資料
+        perf.organization.read, 組織查詢, 允許查詢組織與部門資料
   - type: markdown
     attributes:
       value: |

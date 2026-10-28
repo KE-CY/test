@@ -73,9 +73,10 @@ for (const environment of environments) {
 }
 
 const listed = lines(pick("新增的 Scopes", "Scopes")).map((line) => {
-  const [code, name, description] = line.split("|").map((part) => part.trim());
+  const [code = "", name = "", ...descriptionParts] = line.split(",").map((part) => part.trim());
+  const description = descriptionParts.join(", ").trim();
   if (!code || !name || !description) {
-    errors.push(`scope 格式應為 \`code | 名稱 | 說明\`：\`${line}\``);
+    errors.push(`scope 格式應為 \`code, 名稱, 說明\`：\`${line}\``);
   }
   return { code, name, description };
 });

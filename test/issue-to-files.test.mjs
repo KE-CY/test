@@ -46,8 +46,8 @@ after(() => server.close());
 const attachment = (name) => `[${name}](${origin}${name})`;
 const section = (label, value) => `### ${label}\n\n${value || "_No response_"}\n\n`;
 
-const ORGANIZATION = "perf.organization.read | 查詢組織 | 允許查詢組織資料";
-const EMPLOYEE = "perf.employee.read | 查詢員工 | 允許查詢員工資料";
+const ORGANIZATION = "perf.organization.read, 查詢組織, 允許查詢組織資料";
+const EMPLOYEE = "perf.employee.read, 查詢員工, 允許查詢員工資料";
 
 const uploads = ({ lab = "", stg = "", prod = "" }) =>
   section("lab OpenAPI 檔案", lab) + section("stg OpenAPI 檔案", stg) + section("prod OpenAPI 檔案", prod);
@@ -170,7 +170,7 @@ test("add refuses an environment that already exists", async () => {
 test("add refuses a reused scope code whose content differs", async () => {
   await withRun(
     "add",
-    addBody({ environments: "stg", lab: "", stg: attachment("stg.yaml"), scopes: "perf.organization.read | 組織 | 改了說明" }),
+    addBody({ environments: "stg", lab: "", stg: attachment("stg.yaml"), scopes: "perf.organization.read, 組織, 改了說明" }),
     (cwd, result) => {
       assert.equal(result.status, 1);
       assert.match(result.stderr, /已經註冊且內容不同，要改名稱或說明請用「申請更新」/);
@@ -200,7 +200,7 @@ test("add requires an upload for every selected environment", async () => {
 test("update adds a new scope to a registered product", async () => {
   await withRun(
     "update",
-    updateBody({ scopes: "perf.salary.read | 查詢薪資 | 允許查詢薪資資料" }),
+    updateBody({ scopes: "perf.salary.read, 查詢薪資, 允許查詢薪資資料" }),
     (cwd, result) => {
       assert.equal(result.status, 0, result.stderr);
       assert.match(result.stdout, /新增 scope：perf\.salary\.read/);
@@ -213,7 +213,7 @@ test("update adds a new scope to a registered product", async () => {
 test("update modifies a registered scope and leaves the others alone", async () => {
   await withRun(
     "update",
-    updateBody({ scopes: "perf.organization.read | 組織查詢 | 允許查詢組織與部門資料" }),
+    updateBody({ scopes: "perf.organization.read, 組織查詢, 允許查詢組織與部門資料" }),
     (cwd, result) => {
       assert.equal(result.status, 0, result.stderr);
       assert.match(result.stdout, /更新 scope：perf\.organization\.read/);
@@ -243,7 +243,7 @@ test("update adds a scope and the operation that uses it in one request", async 
     updateBody({
       environments: "lab",
       lab: attachment("lab-post.yaml"),
-      scopes: "perf.salary.read | 查詢薪資 | 允許查詢薪資資料",
+      scopes: "perf.salary.read, 查詢薪資, 允許查詢薪資資料",
     }),
     (cwd, result) => {
       assert.equal(result.status, 0, result.stderr);
