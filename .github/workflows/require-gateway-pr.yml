@@ -1,0 +1,51 @@
+name: Require gateway PR
+
+# 上架順序是 104z-apps 先、本 repo 後：路由與 scope 同步要先上線，registry 才
+# 記錄這個產品已註冊。這支 workflow 是 PR 上的擋門，設成 required check 之後，
+# 對應的 104z-apps PR 沒 merge 就按不下 merge。
+#
+# 104z-apps merge 之後回到這個 PR 按 Re-run jobs 即可放行。
+
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+    paths:
+      - "products/**"
+  workflow_dispatch:
+
+jobs:
+  gateway-pr-merged:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check the linked 104z-apps PR
+        env:
+          # 讀 104z-apps（private）需要跨 repo token，與開 PR 用的是同一個
+          GH_TOKEN: ${{ secrets.Z_APPS_TOKEN }}
+          GATEWAY_REPO: ${{ vars.GATEWAY_REPO || '104corp/104z-apps' }}
+          BODY: ${{ github.event.pull_request.body }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          if [ -z "${GH_TOKEN:-}" ]; then
+            echo "::error::缺少 Z_APPS_TOKEN secret，無法查詢 104z-apps 的 PR 狀態"
+            exit 1
+          fi
+
+          number=$(printf '%s' "$BODY" | grep -oE "Depends on ${GATEWAY_REPO}#[0-9]+" | head -1 | grep -oE '[0-9]+$' || true)
+          if [ -z "$number" ]; then
+            echo "::error::PR 內文沒有 \`Depends on 104corp/104z-apps#<編號>\`。"
+            echo "::error::上架要先在 $GATEWAY_REPO 開 PR 加 routes 與 upstreams，再把該 PR 編號寫進這裡。"
+            exit 1
+          fi
+
+          state=$(gh pr view "$number" --repo "$GATEWAY_REPO" --json state,title,url \
+            --jq '"\(.state)\t\(.title)\t\(.url)"')
+          status=$(printf '%s' "$state" | cut -f1)
+          url=$(printf '%s' "$state" | cut -f3)
+
+          if [ "$status" != "MERGED" ]; then
+            echo "::error::$GATEWAY_REPO PR 還沒 merge（目前 $status）：$url"
+            echo "::error::請先合併該 PR，再回到這裡 Re-run jobs。"
+            exit 1
+          fi
+          echo "✅ 104z-apps PR 已 merge：$url"

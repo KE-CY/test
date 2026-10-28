@@ -50,6 +50,45 @@ jobs:
           npm run check 2>&1 | tee -a "$RUNNER_TEMP/apply.log"
           exit "${PIPESTATUS[0]}"
 
+      # 上架順序：104z-apps 先、本 repo 後。所以先開 gateway 的 PR，拿到編號再開
+      # 這邊的 PR，並把編號寫進內文供 require-gateway-pr 擋門檢查。
+      - name: Check out 104z-apps
+        uses: actions/checkout@v4
+        with:
+          # 測試環境可用 repo variable GATEWAY_REPO 指到替身
+          repository: ${{ vars.GATEWAY_REPO || '104corp/104z-apps' }}
+          token: ${{ secrets.Z_APPS_TOKEN }}
+          path: .z-apps
+
+      - id: gateway
+        name: Open the 104z-apps PR
+        env:
+          GH_TOKEN: ${{ secrets.Z_APPS_TOKEN }}
+          BRANCH: ${{ steps.apply.outputs.branch }}
+          TITLE: ${{ steps.apply.outputs.title }}
+          PRODUCT: ${{ steps.apply.outputs.product_id }}
+          GATEWAY_REPO: ${{ vars.GATEWAY_REPO || '104corp/104z-apps' }}
+        run: |
+          set -euo pipefail
+          node scripts/generate-gateway-files.mjs "$PRODUCT" .z-apps --write 2>&1 | tee -a "$RUNNER_TEMP/apply.log"
+          cd .z-apps
+          if [ -z "$(git status --porcelain ha-ext-gw)" ]; then
+            echo "::error::gateway 端沒有任何異動，請人工確認這次申請是否真的不需要上架"
+            exit 1
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$BRANCH"
+          git add -A ha-ext-gw
+          git commit -m "$TITLE (104ha-ext-gw-config#$ISSUE)"
+          git push -f origin "$BRANCH"
+          printf '由 104corp/104ha-ext-gw-config#%s 自動產生。\n\n### 異動內容\n\n%s\n\n這個 PR 要**先 merge**，104ha-ext-gw-config 的設定 PR 才解得開擋門。\n' \
+            "$ISSUE" "${{ steps.apply.outputs.changes }}" > "$RUNNER_TEMP/gateway-body.md"
+          gh pr view "$BRANCH" >/dev/null 2>&1 \
+            || gh pr create --base main --head "$BRANCH" --title "$TITLE" --body-file "$RUNNER_TEMP/gateway-body.md"
+          echo "number=$(gh pr view "$BRANCH" --json number --jq .number)" >> "$GITHUB_OUTPUT"
+          echo "url=$(gh pr view "$BRANCH" --json url --jq .url)" >> "$GITHUB_OUTPUT"
+
       - name: Check for a competing PR on the same product
         env:
           PREFIX: ${{ steps.apply.outputs.branch_prefix }}
@@ -75,6 +114,8 @@ jobs:
           fi
 
       - name: Commit and open PR
+        env:
+          GATEWAY_REPO: ${{ vars.GATEWAY_REPO || '104corp/104z-apps' }}
         run: |
           set -euo pipefail
           title="${{ steps.apply.outputs.title }}"
@@ -85,13 +126,18 @@ jobs:
           git add -A products
           git commit -m "$title (#$ISSUE)"
           git push -f origin "$branch"
-          printf '由 #%s 自動產生，內容以該 issue 為準。\n\n### 異動內容\n\n%s\n\nCloses #%s\n' \
+          printf '由 #%s 自動產生，內容以該 issue 為準。\n\n### 異動內容\n\n%s\n\n### 上架\n\nDepends on %s#%s —— 該 PR merge 後，回到這裡 Re-run jobs 才解得開擋門。\n\nCloses #%s\n' \
             "$ISSUE" \
             "${{ steps.apply.outputs.changes }}" \
+            "$GATEWAY_REPO" \
+            "${{ steps.gateway.outputs.number }}" \
             "$ISSUE" > "$RUNNER_TEMP/pr-body.md"
           gh pr view "$branch" >/dev/null 2>&1 \
             || gh pr create --base main --head "$branch" --title "$title" --body-file "$RUNNER_TEMP/pr-body.md"
-          gh issue comment "$ISSUE" --body "✅ 已開出 PR：$(gh pr view "$branch" --json url --jq .url)"
+          gh issue comment "$ISSUE" --body "✅ 已開出兩個 PR，請**依序** merge：
+
+          1. 上架（先）：${{ steps.gateway.outputs.url }}
+          2. 設定（後）：$(gh pr view "$branch" --json url --jq .url)"
 
       - name: Report the failure on the issue
         if: failure()
