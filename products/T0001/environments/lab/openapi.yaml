@@ -1,0 +1,37 @@
+openapi: 3.0.3
+
+info:
+  title: PERF API
+  version: 1.0.0
+
+servers:
+  - url: https://dp-perf.104dc-dev.com
+
+paths:
+  /organizations/{organizationId}:
+    get:
+      operationId: getOrganization
+      x-ha-gw-scope: perf.organizationz.read
+      parameters:
+        - name: organizationId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Success
+  /organizations:
+    post:
+      operationId: postOrganization
+      x-ha-gw-scope: perf.organization.write
+      responses:
+        "200":
+          description: Success
+  /organizationz:
+    post:
+      operationId: postOrganization1
+      x-ha-gw-scope: perf.organization1.write
+      responses:
+        "200":
+          description: Success
