@@ -1,0 +1,14 @@
+product_id: T0001
+owner: t0001@104.com.tw
+base_path: /t001
+
+scopes:
+  - code: perf.organizationz.read
+    name: "1"
+    description: "1"
+  - code: perf.organization.write
+    name: "2"
+    description: "2"
+  - code: perf.organization1.write
+    name: "3"
+    description: "3"
