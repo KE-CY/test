@@ -90,6 +90,7 @@ const listed = lines(pick("新增的 Scopes", "Scopes")).map((line) => {
 
 const changes = [];
 let scopes = existing?.scopes ?? [];
+let scopeRemovals = [];
 const same = (a, b) => a.name === b.name && a.description === b.description;
 
 if (request === "add") {
@@ -123,8 +124,16 @@ if (request === "add") {
   const added = listed.filter((scope) => !scopes.some((item) => item.code === scope.code));
   const updated = listed.filter((scope) => scopes.some((item) => item.code === scope.code && !same(item, scope)));
   scopes = [...scopes.map((item) => listed.find((scope) => scope.code === item.code) ?? item), ...added];
+  scopeRemovals = lines(optional("要移除的 Scopes"));
+  for (const code of scopeRemovals) {
+    if (!scopes.some((item) => item.code === code)) errors.push(`scope ${code} 不存在，無法移除`);
+    if (listed.some((scope) => scope.code === code)) errors.push(`scope ${code} 同時出現在要新增/修改與要移除的清單`);
+  }
+  scopes = scopes.filter((item) => !scopeRemovals.includes(item.code));
+  if (scopes.length === 0) errors.push("產品至少要保留一個 scope；要整個下架請用「申請移除」");
   if (added.length > 0) changes.push(`新增 scope：${added.map((scope) => scope.code).join("、")}`);
   if (updated.length > 0) changes.push(`更新 scope：${updated.map((scope) => scope.code).join("、")}`);
+  if (scopeRemovals.length > 0) changes.push(`移除 scope：${scopeRemovals.join("、")}`);
   if (environments.length > 0) changes.push(`更新環境：${environments.join("、")}`);
   if (existing) {
     if (owner !== existing.owner) changes.push(`更新 owner：${existing.owner} → ${owner}`);
@@ -212,6 +221,35 @@ for (const [environment, url] of sources) {
     documents.set(environment, text);
   } catch (error) {
     errors.push(`${environment} 的 OpenAPI 不是合法的 YAML：${error.message}`);
+  }
+}
+
+// 以「套用後」的 OpenAPI 為準檢查 scope 還有沒有人用：這次有換的用新的，沒換的用現有的。
+// route conf 與環境無關，所以任何一個環境還在引用就不能刪。
+if (scopeRemovals.length > 0) {
+  const used = new Map();
+  for (const environment of registered) {
+    const text =
+      documents.get(environment) ??
+      readFileSync(`${environmentsPath}/${environment}/openapi.yaml`, "utf8");
+    for (const [path, item] of Object.entries(parse(text)?.paths ?? {})) {
+      for (const [method, operation] of Object.entries(item ?? {})) {
+        if (!METHODS.includes(method)) continue;
+        const code = operation?.["x-ha-gw-scope"];
+        if (!code) continue;
+        if (!used.has(code)) used.set(code, []);
+        used.get(code).push(`${environment} ${method.toUpperCase()} ${path}`);
+      }
+    }
+  }
+  for (const code of scopeRemovals) {
+    const references = used.get(code);
+    if (references) {
+      errors.push(
+        `scope ${code} 還被 ${references.join("、")} 引用，` +
+          "請在同一張單上傳不含這些 operation 的 OpenAPI，或先改掉它們引用的 scope",
+      );
+    }
   }
 }
 

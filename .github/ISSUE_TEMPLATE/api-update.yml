@@ -63,6 +63,16 @@ body:
         只列**本次要新增或修改**的 scope，沒列到的不受影響。新的 code 會新增，既有的 code 會覆蓋名稱與說明。**這裡不能刪除 scope。**
       placeholder: |
         perf.organization.read, 組織查詢, 允許查詢組織與部門資料
+  - type: textarea
+    id: scope_removals
+    attributes:
+      label: 要移除的 Scopes
+      description: |
+        一行一個，**只填 code**。沒有要移除就留空。
+        仍被任一環境的 operation 引用的 scope 會被擋下 —— 請在同一張單一併上傳不含那些 operation 的 OpenAPI，或先改掉它們引用的 scope。
+        產品至少要保留一個 scope；要整個下架請用「申請移除」。
+      placeholder: |
+        perf.organization1.write
   - type: markdown
     attributes:
       value: |

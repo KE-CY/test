@@ -62,7 +62,11 @@ const addBody = (f = {}) =>
   uploads({ lab: f.lab ?? attachment("lab.yaml"), stg: f.stg, prod: f.prod });
 
 const updateBody = (f = {}) =>
-  common(f) + section("要更新的環境", f.environments) + section("Scopes", f.scopes) + uploads(f);
+  common(f) +
+  section("要更新的環境", f.environments) +
+  section("Scopes", f.scopes) +
+  section("要移除的 Scopes", f.scopeRemovals) +
+  uploads(f);
 
 const removeBody = (f = {}) =>
   common(f) +
@@ -449,4 +453,65 @@ test("rejects a malformed product id or base path with a readable message", asyn
     assert.match(result.stderr, /產品編號「T001」格式不對：1 個大寫英文字母加 4 位數字/);
     assert.match(result.stderr, /對外路徑前綴「\/Perf」格式不對/);
   });
+});
+
+// ── 移除 scope ────────────────────────────────────────────
+
+test("update removes a scope nothing references", async () => {
+  await withRun(
+    "update",
+    updateBody({ scopeRemovals: "perf.employee.read" }),
+    (cwd, result) => {
+      assert.equal(result.status, 0, result.stderr);
+      assert.match(result.stdout, /移除 scope：perf\.employee\.read/);
+      assert.deepEqual(codes(cwd), ["perf.organization.read"]);
+    },
+    ["lab"],
+  );
+});
+
+test("update refuses to remove a scope that is still referenced", async () => {
+  await withRun(
+    "update",
+    updateBody({ scopeRemovals: "perf.organization.read" }),
+    (cwd, result) => {
+      assert.equal(result.status, 1);
+      assert.match(result.stderr, /scope perf\.organization\.read 還被 lab GET \/things 引用/);
+    },
+    ["lab"],
+  );
+});
+
+test("update checks the reference against the newly uploaded OpenAPI", async () => {
+  await withRun(
+    "update",
+    updateBody({ environments: "lab", lab: attachment("lab-post.yaml"), scopeRemovals: "perf.organization.read" }),
+    (cwd, result) => {
+      // 新上傳的 lab-post.yaml 仍引用該 scope，只是換成 POST
+      assert.equal(result.status, 1);
+      assert.match(result.stderr, /還被 lab POST \/things 引用/);
+    },
+    ["lab"],
+  );
+});
+
+test("update refuses an unregistered scope or emptying the product", async () => {
+  await withRun(
+    "update",
+    updateBody({ scopeRemovals: "perf.nope.read" }),
+    (cwd, result) => {
+      assert.equal(result.status, 1);
+      assert.match(result.stderr, /scope perf\.nope\.read 不存在，無法移除/);
+    },
+    ["lab"],
+  );
+  await withRun(
+    "update",
+    updateBody({ scopeRemovals: "perf.organization.read\nperf.employee.read" }),
+    (cwd, result) => {
+      assert.equal(result.status, 1);
+      assert.match(result.stderr, /至少要保留一個 scope/);
+    },
+    ["lab"],
+  );
 });
