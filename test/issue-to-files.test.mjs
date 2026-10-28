@@ -440,3 +440,12 @@ test("names the branch and the title like the existing registration PRs", async 
     rmSync(cwd, { recursive: true });
   }
 });
+
+test("rejects a malformed product id or base path with a readable message", async () => {
+  const body = addBody().replace("### 產品編號\n\nP0078", "### 產品編號\n\nT001").replace("/perf", "/Perf");
+  await withRun("add", body, (cwd, result) => {
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /產品編號「T001」格式不對：1 個大寫英文字母加 4 位數字/);
+    assert.match(result.stderr, /對外路徑前綴「\/Perf」格式不對/);
+  });
+});

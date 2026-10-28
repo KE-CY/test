@@ -59,6 +59,13 @@ const lines = (value) =>
 const productId = field("產品編號");
 const owner = field("產品負責人 email");
 const basePath = field("對外路徑前綴");
+// 這兩個格式 schema 也會擋，但訊息是 regex，提早在這裡講人話
+if (productId && !/^[A-Z][0-9]{4}$/.test(productId)) {
+  errors.push(`產品編號「${productId}」格式不對：1 個大寫英文字母加 4 位數字，例如 P0078`);
+}
+if (basePath && !/^\/[a-z][a-z0-9-]*$/.test(basePath)) {
+  errors.push(`對外路徑前綴「${basePath}」格式不對：斜線開頭、全小寫英數與連字號，例如 /perf`);
+}
 const productPath = `products/${productId}/product.yaml`;
 const environmentsPath = `products/${productId}/environments`;
 const existing = existsSync(productPath) ? parse(readFileSync(productPath, "utf8")) : null;
