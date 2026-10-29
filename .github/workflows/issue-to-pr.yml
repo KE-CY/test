@@ -134,10 +134,15 @@ jobs:
             "$ISSUE" > "$RUNNER_TEMP/pr-body.md"
           gh pr view "$branch" >/dev/null 2>&1 \
             || gh pr create --base main --head "$branch" --title "$title" --body-file "$RUNNER_TEMP/pr-body.md"
-          gh issue comment "$ISSUE" --body "✅ 已開出兩個 PR，請**依序** merge：
+          # 人工 review 集中在 104z-apps；這邊的設定 PR 只是把 registry 補上，
+          # 擋門一綠就自動合併。需要 repo 開啟 Allow auto-merge，且 branch
+          # protection 把 Require gateway PR 設成 required status check。
+          gh pr merge "$branch" --auto --squash --delete-branch \
+            || gh issue comment "$ISSUE" --body "⚠️ 設定 auto-merge 失敗，請確認 repo 已開啟 Allow auto-merge，並在 branch protection 把 \`Require gateway PR\` 設為 required status check。這個 PR 需要人工合併。"
+          gh issue comment "$ISSUE" --body "✅ 已開出兩個 PR：
 
-          1. 上架（先）：${{ steps.gateway.outputs.url }}
-          2. 設定（後）：$(gh pr view "$branch" --json url --jq .url)"
+          1. **上架（需人工 review）**：${{ steps.gateway.outputs.url }}
+          2. 設定（已設 auto-merge，上架 PR 合併後自動跟上）：$(gh pr view "$branch" --json url --jq .url)"
 
       - name: Report the failure on the issue
         if: failure()
