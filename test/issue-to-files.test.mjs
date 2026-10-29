@@ -440,7 +440,7 @@ test("names the branch and the title like the existing registration PRs", async 
     assert.match(written, /^branch=perf\/register-p0078-lab$/m);
     assert.match(written, /^branch_prefix=perf\/$/m);
     assert.match(written, /^title=Perf\/register p0078 lab$/m);
-    assert.match(written, /^issue_title=\[新增\] P0078 lab$/m);
+    assert.match(written, /^issue_title=\[對外新增\] P0078 lab$/m);
   } finally {
     rmSync(cwd, { recursive: true });
   }

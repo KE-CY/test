@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// 把 API 申請 issue（新增 / 更新 / 移除）的表單內容套用到 products/ 下的設定檔。
+// 把對外 API 申請 issue（新增 / 更新 / 移除）的表單內容套用到 products/ 下的設定檔。
 // 申請類型來自 issue 的 request:add / request:update / request:remove 標籤：
 //   新增：第一次註冊的產品或環境，全欄位必填
 //   更新：既有產品的後續調整，含新增 scope
@@ -309,7 +309,7 @@ const target = [action, productId.toLowerCase(), ...environments].join("-");
 const branch = `${slug}/${target}`;
 const title = `${slug}/${target}`.replaceAll("-", " ").replace(/^./, (c) => c.toUpperCase());
 // issue 標題用中文動作 + 產品編號 + 環境，列表上一眼看得懂是誰的什麼申請
-const issueTitle = `[${{ add: "新增", update: "更新", remove: "移除" }[request]}] ${productId}${
+const issueTitle = `[對外${{ add: "新增", update: "更新", remove: "移除" }[request]}] ${productId}${
   environments.length > 0 ? ` ${environments.join(" ")}` : ""
 }`;
 const summary = changes.map((change) => `- ${change}`).join("\n");

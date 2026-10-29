@@ -1,4 +1,4 @@
-name: Issue to PR
+name: Issue to PR (ha-ext-gw)
 
 on:
   issues:
@@ -70,7 +70,7 @@ jobs:
           GATEWAY_REPO: ${{ vars.GATEWAY_REPO || '104corp/104z-apps' }}
         run: |
           set -euo pipefail
-          node scripts/generate-gateway-files.mjs "$PRODUCT" .z-apps --write 2>&1 | tee -a "$RUNNER_TEMP/apply.log"
+          node scripts/generate-ext-gw-files.mjs "$PRODUCT" .z-apps --write 2>&1 | tee -a "$RUNNER_TEMP/apply.log"
           cd .z-apps
           if [ -z "$(git status --porcelain ha-ext-gw)" ]; then
             echo "::error::gateway 端沒有任何異動，請人工確認這次申請是否真的不需要上架"

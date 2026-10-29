@@ -1,10 +1,10 @@
 #!/usr/bin/env node
-// 從 registry 產出 104z-apps/ha-ext-gw 上架所需的檔案：
+// 從 registry 產出對外 API 中心（104z-apps/ha-ext-gw）上架所需的檔案：
 //   routes/<PRODUCT_ID>/product.yaml   原樣複製
 //   routes/<PRODUCT_ID>/<base_path>.conf  由 generate-nginx.mjs 產生
 //   overlays/<env>/*.values.yaml 的 upstreams.<PRODUCT_ID>
 //
-//   node scripts/generate-gateway-files.mjs <product_id> <104z-apps 路徑> [--write]
+//   node scripts/generate-ext-gw-files.mjs <product_id> <104z-apps 路徑> [--write]
 //
 // 預設 dry-run 只印出會做什麼；加 --write 才真的落檔。
 import { execFileSync } from "node:child_process";
@@ -18,7 +18,7 @@ const [productId, appsPath, ...flags] = process.argv.slice(2);
 const write = flags.includes("--write");
 
 if (!productId || !appsPath) {
-  console.error("Usage: node scripts/generate-gateway-files.mjs <product_id> <104z-apps 路徑> [--write]");
+  console.error("Usage: node scripts/generate-ext-gw-files.mjs <product_id> <104z-apps 路徑> [--write]");
   process.exit(1);
 }
 

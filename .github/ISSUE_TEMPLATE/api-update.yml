@@ -1,14 +1,16 @@
-name: 申請更新
-description: 既有產品的後續調整：換 OpenAPI、新增或修改 scope、改負責人或路徑
-title: "[更新] 產品編號 環境"
-labels: ["api-registration", "request:update"]
+name: 對外 API ‧ 申請更新
+description: 對外 API 中心：既有產品的後續調整——換 OpenAPI、新增修改移除 scope、改負責人或路徑
+title: "[對外更新] 產品編號 環境"
+labels: ["api-registration", "gateway:ext", "request:update"]
 body:
   - type: markdown
     attributes:
       value: |
+        合併後會同步到 **[104z-apps/ha-ext-gw](https://github.com/104corp/104z-apps/tree/main/ha-ext-gw)（對外 API 中心）**。內部 APIM 轉介請用另一組範本。
+
         **既有產品的後續調整**：換掉某環境的 OpenAPI、新增或修改 scope、變更產品負責人或路徑前綴。
         還沒建立過的環境請用「申請新增」。完整說明見 [README](https://github.com/KE-CY/test/blob/main/README.md)。
-        標題不用自己想：送出後會依填寫內容自動改成 `[更新] 產品編號 環境`（例如 `[更新] F0055 lab stg`）。
+        標題不用自己想：送出後會依填寫內容自動改成 `[對外更新] 產品編號 環境`（例如 `[對外更新] F0055 lab stg`）。
         送出後會自動產生 PR 交由 API Center 審核；若驗證不通過會在這張 issue 留言列出每一項錯誤，修正內容後重新編輯 issue 即可重跑。
   - type: input
     id: product_id
