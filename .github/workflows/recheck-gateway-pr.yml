@@ -15,6 +15,7 @@ jobs:
     permissions:
       actions: write
       pull-requests: read
+      issues: write
     env:
       GH_TOKEN: ${{ github.token }}
       GATEWAY_TOKEN: ${{ secrets.Z_APPS_TOKEN }}
@@ -44,3 +45,22 @@ jobs:
             count=$((count + 1))
           done < <(jq -c '.[]' prs.json)
           echo "重跑了 $count 個擋門檢查"
+
+      # 設定 PR 由 GITHUB_TOKEN 自動合併時，GitHub 不會關閉內文 Closes 連結的
+      # issue（人工合併才會）。這裡補上收尾。
+      - name: Close issues whose config PR has merged
+        run: |
+          set -euo pipefail
+          closed=0
+          while read -r pr; do
+            number=$(printf '%s' "$pr" | jq -r .number)
+            issue=$(printf '%s' "$pr" | jq -r .body | grep -oE 'Closes #[0-9]+' | head -1 | grep -oE '[0-9]+$' || true)
+            [ -n "$issue" ] || continue
+            state=$(gh issue view "$issue" --repo "$GITHUB_REPOSITORY" --json state --jq .state 2>/dev/null || true)
+            [ "$state" = "OPEN" ] || continue
+            gh issue close "$issue" --repo "$GITHUB_REPOSITORY" \
+              --comment "✅ 設定 PR #${number} 已合併，申請完成。"
+            echo "關閉 issue #$issue（設定 PR #$number 已合併）"
+            closed=$((closed + 1))
+          done < <(gh pr list --repo "$GITHUB_REPOSITORY" --state merged --limit 20 --json number,body | jq -c '.[]')
+          echo "關閉了 $closed 張 issue"
