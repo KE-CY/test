@@ -147,15 +147,30 @@ jobs:
       - name: Report the failure on the issue
         if: failure()
         run: |
+          # 只留真正的錯誤行：npm 的 "> script" 橫幅與空行對申請人沒有意義
+          grep -vE '^\s*$|^> |^npm (notice|warn|ERR)' "$RUNNER_TEMP/apply.log" 2>/dev/null \
+            | tail -n 30 > "$RUNNER_TEMP/errors.txt" || true
           {
-            echo "❌ 申請未通過，修正後重新編輯這張 issue 即可重跑。"
+            echo "## ❌ 申請未通過"
             echo
-            if [ -s "$RUNNER_TEMP/apply.log" ]; then
-              echo '```'
-              tail -n 40 "$RUNNER_TEMP/apply.log"
-              echo '```'
+            if [ -s "$RUNNER_TEMP/errors.txt" ]; then
+              echo "以下項目需要修正："
               echo
+              echo '```'
+              cat "$RUNNER_TEMP/errors.txt"
+              echo '```'
+            else
+              echo "執行過程發生未預期的錯誤，請看下方執行紀錄，或聯絡 API Center。"
             fi
-            echo "[完整執行紀錄](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})"
+            echo
+            echo "### 怎麼處理"
+            echo
+            echo "1. 點這張 issue 右上角的 **✏️ 編輯**，依照上面的訊息修正對應欄位"
+            echo "2. 儲存後**會自動重新檢查**——不用重開 issue，也不用留言通知任何人"
+            echo "3. 全部通過就會自動開出上架與設定兩個 PR，並在這裡留言告訴你"
+            echo
+            echo "修幾次都可以，每次儲存都會重跑一輪。"
+            echo
+            echo "<sub>[完整執行紀錄](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})</sub>"
           } > "$RUNNER_TEMP/failure.md"
           gh issue comment "$ISSUE" --body-file "$RUNNER_TEMP/failure.md"
