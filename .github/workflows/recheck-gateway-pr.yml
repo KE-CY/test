@@ -18,7 +18,7 @@ jobs:
       issues: write
     env:
       GH_TOKEN: ${{ github.token }}
-      GATEWAY_TOKEN: ${{ secrets.Z_APPS_TOKEN }}
+      GATEWAY_TOKEN: ${{ secrets.GH_PAT }}
       GATEWAY_REPO: ${{ vars.GATEWAY_REPO || '104corp/104z-apps' }}
     steps:
       - name: Re-run the gate for PRs whose gateway PR has merged

@@ -57,13 +57,13 @@ jobs:
         with:
           # 測試環境可用 repo variable GATEWAY_REPO 指到替身
           repository: ${{ vars.GATEWAY_REPO || '104corp/104z-apps' }}
-          token: ${{ secrets.Z_APPS_TOKEN }}
+          token: ${{ secrets.GH_PAT }}
           path: .z-apps
 
       - id: gateway
         name: Open the 104z-apps PR
         env:
-          GH_TOKEN: ${{ secrets.Z_APPS_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_PAT }}
           BRANCH: ${{ steps.apply.outputs.branch }}
           TITLE: ${{ steps.apply.outputs.title }}
           PRODUCT: ${{ steps.apply.outputs.product_id }}

@@ -20,14 +20,14 @@ jobs:
       - name: Check the linked 104z-apps PR
         env:
           # 讀 104z-apps（private）需要跨 repo token，與開 PR 用的是同一個
-          GH_TOKEN: ${{ secrets.Z_APPS_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_PAT }}
           GATEWAY_REPO: ${{ vars.GATEWAY_REPO || '104corp/104z-apps' }}
           BODY: ${{ github.event.pull_request.body }}
           PR: ${{ github.event.pull_request.number }}
         run: |
           set -euo pipefail
           if [ -z "${GH_TOKEN:-}" ]; then
-            echo "::error::缺少 Z_APPS_TOKEN secret，無法查詢 104z-apps 的 PR 狀態"
+            echo "::error::缺少 GH_PAT secret，無法查詢 104z-apps 的 PR 狀態"
             exit 1
           fi
 
